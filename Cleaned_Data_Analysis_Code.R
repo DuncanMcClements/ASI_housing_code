@@ -6,7 +6,7 @@ alpha <- 0.65
 eta <- 0.25
 theta <- 1/0.3
 beta <- 0.32
-housing_data <- read.csv(file = 'C:\\Users\\dunca\\Downloads\\FINAL_ASI_DATA.csv') #data
+housing_data <- read.csv(file = 'C:\\Users\\[USER]\\Downloads\\FINAL_ASI_DATA.csv') #data, change [USER] to name
 #correct for population composition
 Wnaive <- housing_data[,38]
 housing.data.lm<-lm(Median..ASHE.7 ~ Aged.under.15.years + Aged.15.to.64.years + Asian..Bangladeshi + Asian..Chinese + Asian..Indian + Asian..Pakistani + Asian..Other.Asian + Black..African + Black..Caribbean + Black..Other.Black + Mixed..White.and.Asian + Mixed..White.and.Black.African + Mixed..White.and.Black.Caribbean + Mixed..Other.Mixed + White..British + White..Irish + White..Gypsy + White..Roma + White..Other.White + Other.ethnic.group..Arab + X.8 + X0 + X1 + X2 + X3 + X4 + X5, data = housing_data)
@@ -25,8 +25,8 @@ W2023 <- W_pred
 L2023 <- housing_data[,37]
 P2023 <- housing_data[,41]
 
-P_max <- housing_data[,45] #set to 43 for conservative, 44 for central and 45 for stretch
-gamma <- 0 #set to 1/1.75 for conservative, 1/10 for central and 0 for stretch
+P_max <- housing_data[,44] #set to 43 for conservative, 44 for central and 45 for stretch
+gamma <- 1/10 #set to 1/1.75 for conservative, 1/10 for central and 0 for stretch
 
 Z2023_p <- (P2023^beta)/W2023
 Z2023_ip <- (L2023^(1/theta))*(P2023^beta)/W2023
@@ -36,19 +36,17 @@ A2023 <- L2023*(W2023^((1-eta)/(1-eta-alpha)))
 #Existing equilibrium
 P_bar <- P2023/((L2023/sum(L2023))^gamma)
 eq_L <- (((A2023^(1-eta-alpha))*((Z2023_p/(P_bar^beta))^(1-eta)))^(1/(1-alpha-eta+(beta*gamma*(1-eta)))))/sum(((A2023^(1-eta-alpha))*((Z2023_p/(P_bar^beta))^(1-eta)))^(1/(1-alpha-eta+(beta*gamma*(1-eta)))))
-lon_pop <- eq_L[1]
+lon_pop <- eq_L[1] #London population
 eq_L1 <- eq_L
 Q2023 <- (P2023^beta)/Z2023_p
 Q_bar <- sum(eq_L*Q2023)
 Y2023 <- sum(A2023*((Q_bar/Q2023)^((1-eta)/(1-alpha-eta))))^((1-alpha-eta)/(1-eta))
-GDP_norm <- Y2023
-V_norm <- alpha * Y2023/Q_bar
+GDP_norm <- Y2023 #current GDP
+V_norm <- alpha * Y2023/Q_bar #current welfare
 
 #compute counterfactual
 P_trunc <- c()
-for(i in 1:length(P2023)){
-  P_trunc <- append(P_trunc, min(P_max[i], P2023[i]))
-}
+for(i in 1:length(P2023)){P_trunc <- append(P_trunc, min(P_max[i], P2023[i]))}
 #Use first P_bar formula for just London: use second for all cities
 #P_bar <- c(c(P_max[1], P2023[2:length(P2023)])/((L2023/sum(L2023))^gamma))
 P_bar <- c(P_trunc/((L2023/sum(L2023))^gamma))
@@ -56,8 +54,8 @@ eq_L <- (((A2023^(1-eta-alpha))*((Z2023_p/(P_bar^beta))^(1-eta)))^(1/(1-alpha-et
 Phypo <- P_bar*(eq_L^gamma) #prices given labour distribution
 Q2023 <- (Phypo^beta)/Z2023_p
 Q_bar <- sum(Q2023*eq_L)
-Y2023 <- sum(A2023*((Q_bar/Q2023)^((1-eta)/(1-alpha-eta))))^((1-alpha-eta)/(1-eta))
-V <- alpha * Y2023/Q_bar
+Y2023 <- sum(A2023*((Q_bar/Q2023)^((1-eta)/(1-alpha-eta))))^((1-alpha-eta)/(1-eta)) #new nominal GDP
+V <- alpha * Y2023/Q_bar #new welfare
 (Y2023/GDP_norm) #nominal growth
 (Y2023/GDP_norm)+(beta*(sum(P2023*eq_L) - sum(P2023*eq_L1))/sum(P2023*eq_L1)) #real growth
 eq_L[1]/lon_pop #London growth
